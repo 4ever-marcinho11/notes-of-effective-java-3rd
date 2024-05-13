@@ -12,13 +12,13 @@ advantages:
 
 1. Static factory methods can offer clear guidance. In Java, constructors can be overloaded, but they cannot have identical parameter lists. So this sentence means that we can change the order of a sequence of parameters to get an object of the same attributes. However, these constructors may confuse us because they are similar and we can’t know the differences directly by different orders of parameters.
 2. `new Person()` creates a new Person object when it is called. But static factory method can avoid this circumstance when we don’t want to create an object every time we call them.
-   - The target of `Flyweight pattern`: to reduce the occupation of memory and the cost of creating object so that to enhance the performance.
+   - The target of `Flyweight pattern`: to reduce the occupation of memory and the cost of creating objects so that to enhance the performance.
 
 3. The combination of static factory method and factory method pattern can let users acquire any actual class of an abstract class.
 4. Different input parameters determine different returned types that are mentioned in the 3rd advantage.
 5. When you are writing the class of `PersonFactory`, you don't need to know what object you will get finally. Just like you may get a Male or Female object, however, in the static factory method `getOnePerson()`, the return type is simply `Person`. Of course, this advantage also have a strong relationship with 3rd advantage.
    - `Bridge pattern`:
-     1. `Service provider framework` is a set of some functions. These functions can be called as `service Interface`.
+     1. `Service provider framework` is a set of some functions. These functions can be called as `service interface`.
      2. Provider use `provider registration API` to implement these abstract functions and can also add some new functions.
      3. Client, when using this framework, can acquire a richer functions than the original functions by `service access API`. 
 
@@ -30,19 +30,324 @@ disadvantages:
 
 ### Item 2 builder
 
+The disadvantages of `telescoping constructor pattern`:
+
+1. Clients don't know the meanings of the parameters, if they don't review the API, especially when they encounter long sequences of identically typed parameters.
+
+You can use `Java Bean pattern` to avoid using `telescoping constructor pattern` by invoking parameterless constructor and using setters. However, there are some disadvantages:
+
+1. A simple construction may be split by a host of calls, which means that this certain object can’t be used unless we give all the necessary parameters(a status of inconsistency).
+2. If this object is required immutable, in other words, we don’t want to change this object after creating it, `Java Bean pattern` can’t guarantee this expect because of setters.
+
+So, we want a mode that can let user know the meaning of a parameter and that can offer an object by an integrated way. `Builder pattern` is a good solution. The example is shown below:
+
+```java
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class Computer {
+    String cpu;
+    String cache;
+    String mm;
+    String em;
+    String screen;
+    String frame;
+    String keyboard;
+    String battery;
+    String touchBoard;
+    String fan;
+    String gpu;
+
+    public Computer(Builder builder) {
+        this.cpu = builder.cpu;
+        this.cache = builder.cache;
+        this.mm = builder.mm;
+        this.em = builder.mm;
+        this.keyboard = builder.keyboard;
+        this.touchBoard = builder.touchBoard;
+        this.screen = builder.screen;
+        this.frame = builder.frame;
+        this.battery = builder.battery;
+        this.fan = builder.fan;
+        this.gpu = builder.gpu;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static final class Builder {
+        String cpu;
+        String cache;
+        String mm;
+        String em;
+        String screen;
+        String frame;
+        String keyboard;
+        String battery;
+        String touchBoard;
+        String fan;
+        String gpu;
+
+        public Builder cpu(String cpu) {
+            this.cpu = cpu;
+            return this;
+        }
+
+        public Builder cache(String cache) {
+            this.cache = cache;
+            return this;
+        }
+
+        public Builder mm(String mm) {
+            this.mm = mm;
+            return this;
+        }
+
+        public Builder em(String em) {
+            this.em = em;
+            return this;
+        }
+
+        public Builder screen(String screen) {
+            this.screen = screen;
+            return this;
+        }
+
+        public Builder frame(String frame) {
+            this.frame = frame;
+            return this;
+        }
+
+        public Builder keyboard(String keyboard) {
+            this.keyboard = keyboard;
+            return this;
+        }
+
+        public Builder battery(String battery) {
+            this.battery = battery;
+            return this;
+        }
+
+        public Builder touchBoard(String touchBoard) {
+            this.touchBoard = touchBoard;
+            return this;
+        }
+
+        public Builder fan(String fan) {
+            this.fan = fan;
+            return this;
+        }
+
+        public Builder gpu(String gpu) {
+            this.gpu = gpu;
+            return this;
+        }
+
+        public Computer build() {
+            return new Computer(this);
+        }
+    }
+}
+```
+
+We can use `Computer c = Computer.builder().xxx()….build()` to get a Computer object. Thus, you can know that the implementation of  `@Builder`(a lombok annotation) is the same as this example.
+
+`Builder pattern` in class hierarchies can implement a variety of sub-classes of an abstract class.
+
+```
+```
+
+
+
+
+
 ### Item 3 singleton
 
-### Item 4 
+Singleton guarantees that the class will be instantiated exactly once.
+
+Ways to create singleton:
+
+1. eager initialization: Thread-safe because of static and final. However, the singleton object is instantiated  when the class is loaded, whether it is used or not.
+
+   ```java
+   public class Logger {
+   	private static final Logger logger = new Logger();
+   	
+   	private Logger() {
+   		// initialize logger
+   	}
+   	
+   	public static Logger getLogger() {
+   		return logger;
+   	}
+   }
+   ```
+
+2. static block initialization: Thread-safe because of static block will execute only once when loading the class. However, the singleton object is instantiated  when the class is loaded, whether it is used or not.
+
+   ```java
+   public class Logger {
+   	private static Logger logger;
+   	
+   	static {
+   		try {
+   			logger = new Logger();
+   		} catch (Exception e) {
+   			// handle exception
+   		}
+   	}
+   	
+   	private Logger() {
+   		// initialize logger
+   	}
+   	
+   	public static Logger getLogger() {
+   		return logger;
+   	}
+   }
+   ```
+
+3. lazy initialization: Thread-safe in single-thread but unsafe in multi-thread
+
+   ```java
+   public class Logger {
+   	private static Logger logger;
+   	
+   	private Logger() {
+   		// initialize logger
+   	}
+   	
+   	public static Logger getLogger() {
+           if (logger == null) {
+               // sleep 1s to cause thread unsafe problem
+               try {
+                   Thread.sleep(1000);
+               } catch (InterruptedException e) {
+                   Thread.currentThread().interrupt();
+               }
+               
+               logger = new Logger();
+           }
+   		return logger;
+   	}
+   }
+   ```
+
+4. thread-safe lazy initialization: 
+
+   ```java
+   public class Logger {
+       // volatile prevents instruction reordering in multithreading
+   	private static volatile Logger logger;
+   	
+   	private Logger() {
+   		// initialize logger
+   	}
+   	
+       // In fact, synchronization is only required when the first few threads are competing to create an instance, but the synchronized annotation on a method can cause performance degradation even after the instance is created
+   	public static synchronized Logger getLogger_1() {
+           if (logger == null) {
+               logger = new Logger();
+           }
+   		return logger;
+   	}
+       
+       // Use double check locks to improve efficiency
+       public static Logger getLogger_2() {
+           if (logger == null) {
+               synchronized (Logger.class) {
+                   if (logger == null) {
+                       logger = new Logger();
+                   }
+               }
+           }
+   		return logger;
+   	}
+   }
+   ```
+
+5. bill pugh: Logger object is initiated when `getLogger()` is invoked. And it is thread-safe because the loading process of static inner class is thread-safe. Furthermore, it doesn’t need extra synchronization mechanism, which means it has a better performance.
+
+   ```java
+   public class Logger {
+   	private Logger() {
+   		// initialize logger
+   	}
+   	
+       private static class LoggerHelper {
+           private static final Logger logger = new Logger();
+       }
+       
+   	public static Logger getLogger() {
+           return LoggerHelper.logger;
+   	}
+   }
+   ```
+
+But you can break singleton by invoking the private constructor reflectively. How to deal with this problem? Use enum!
+
+```java
+public enum Logger {
+	LOGGER;
+    
+    private Logger () {
+        // initialize logger
+    }
+}
+```
+
+If you want to use singleton in a distributive system, one effective way is enum, the other way is implementing `Serializable` interface and declare all instance fields
+transient and provide a `readResolve` method
+
+```java
+public class Logger implements Serializable {
+	private static final long serialVersionUID = 1L;
+    
+    private Logger () {
+        // initialize logger
+    }
+    
+    private static class LoggerHelper {
+        private static final Logger logger = new Logger();
+    }
+    
+    public static Logger getLogger() {
+        return LoggerHelper.logger;
+	}
+    
+    private Object readResolve() {
+        return getLogger();
+    }
+}
+```
+
+
+
+### Item 4 private constructor
+
+You should make utility class’s constructor private to avoid instantiating this class. Make it abstract is useless for the reason that you can create a sub-class to instantiate the sub-class.
 
 ### Item 5 dependency injection
 
+
+
 ### Item 6 don’t over-create objects
+
+
 
 ### Item 7 
 
+
+
 ### Item 8 
 
+
+
 ### Item 9 try-with-resources
+
+
 
 ## Chapter 3
 
