@@ -298,8 +298,7 @@ public enum Logger {
 }
 ```
 
-If you want to use singleton in a distributive system, one effective way is enum, the other way is implementing `Serializable` interface and declare all instance fields
-transient and provide a `readResolve` method
+If you want to use singleton in a distributive system, one effective way is enum, the other way is implementing `Serializable` interface and declare all instance fields `transient` and provide a `readResolve` method.
 
 ```java
 public class Logger implements Serializable {
@@ -329,7 +328,7 @@ public class Logger implements Serializable {
 
 You should make utility class’s constructor private to avoid instantiating this class. Make it abstract is useless for the reason that you can create a sub-class to instantiate the sub-class.
 
-### Item 5 dependency injection
+### Item 5 
 
 
 
@@ -349,7 +348,7 @@ String s2 = new String(“monster”);
 
 The string “monster” might occupy two memory spaces. One is in pool mentioned before, the other is  in heap space, which is actually re-occupied.
 
-new keyword will create a new object in heap space, we need to avoid over creating new object. For example, if we use regular expression to validate an email is valid or not, we can use Pattern to apply the regular expression string, like `\w+@[a-zA-z0-9]{1,}\.com`:
+`new` keyword will create a new object in heap space, we need to avoid over creating new object. For example, if we use regular expression to validate an email is valid or not, we can use Pattern to apply the regular expression string, like `\w+@[a-zA-z0-9]{1,}\.com`:
 
 ```java
 public boolean isValid(String given String){
@@ -379,11 +378,20 @@ public boolean isValid(String given String){
 }
 ```
 
-
+You can treat an object as a pointer in C++. So, if you use boxed primitives instead of primitives, when you change the value, the primitives will change it at the original location, but boxed primitives will point t another memory space. 
 
 ### Item 7 
 
+When you build your own collection, you need to notice that you should set null to an useless reference so that gc can collect is as a garbage to avoid memory leak.
 
+Here are 4 reference types in Java:
+
+1. Strong Reference: is created by new keyword. It will never be collected by gc if it exists.
+2. Soft Reference: When memory space is insufficient seriously, gc will collect this kind of reference to meet the memory requirement.
+3. Weak Reference: will be collected whether memory space is sufficient or not.
+4. Phantom Reference: we cannot get object by a phantom reference. Phantom reference mainly tracks the status of an object which will be collected by gc.
+
+If you want to build your own cache by `Map`, you can choose `WeakHashMap` because it    is based on weak reference. When a reference no longer points to a key, the entry of this key will be eliminated.
 
 ### Item 8 
 
@@ -391,7 +399,9 @@ public boolean isValid(String given String){
 
 ### Item 9 try-with-resources
 
+If we use try-catch-finally to operate a file, we need an input stream and an output stream. But this will make codes redundant because there will be a lot of try blocks. 
 
+So try-with-resources guarantees a more readable codes than try-catch-finally, and offers more valuable exceptions generated.
 
 ## Chapter 3
 
