@@ -335,6 +335,50 @@ You should make utility class’s constructor private to avoid instantiating thi
 
 ### Item 6 don’t over-create objects
 
+`String` variable is stored in a string constant pool. So if we declare a String object like:
+
+```
+String s1 = “apple”;
+```
+
+This “apple” string will be preserved in the constant pool. However, if we declare a string like:
+
+```
+String s2 = new String(“monster”);
+```
+
+The string “monster” might occupy two memory spaces. One is in pool mentioned before, the other is  in heap space, which is actually re-occupied.
+
+new keyword will create a new object in heap space, we need to avoid over creating new object. For example, if we use regular expression to validate an email is valid or not, we can use Pattern to apply the regular expression string, like `\w+@[a-zA-z0-9]{1,}\.com`:
+
+```java
+public boolean isValid(String given String){
+    return givenString.matches("\\w+@[a-zA-z0-9]{1,}\\.com");
+}
+```
+
+This method is rather inefficient because if we use this sentence for many times, it may create  countless the same Pattern object because the source code of `Pattern`‘s `compile` will create a new object once it runs:
+
+```java
+public static Pattern compile(String regex) {
+    return new Pattern(regex, 0);
+}
+```
+
+The way to avoid creating new object is use static block:
+
+```java
+static final Pattern emailPattern;
+
+static {
+    emailPattern = Pattern.compile("\\w+@[a-zA-z0-9]{1,}\\.com");
+}
+
+public boolean isValid(String given String){
+    return emailPattern.matcher(givenString).find();
+}
+```
+
 
 
 ### Item 7 
