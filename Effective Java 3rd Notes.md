@@ -405,6 +405,29 @@ So try-with-resources guarantees a more readable codes than try-catch-finally, a
 
 ## Chapter 3
 
+### Item 10 override “equals”
+
+If you want to override equals in a certain class, you should obey these rules:
+
+1. reflective: `x.equals(x)` is true
+2. symmetric: `x.equals(y)` equals `y.equals(x)`
+3. transitive: `x.equals(y)` is true, `y.equals(z)` is true, `x.equals(z)` should be true
+4. consistent: results of `x.equals(y)` should be the same
+
+
+
+### Item 11 override “hashCode”
+
+always override `hashCode` when you override `equals`
+
+### Item 12 override “toString”
+
+We can see what the object contains by `toString`
+
+### Item 13 clone
+
+Must be prudent when we need a copy of an object. Copy constructor and copy factory are two better ways.
+
 ## Chapter 4
 
 ## Chapter 5
