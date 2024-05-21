@@ -428,6 +428,72 @@ We can see what the object contains by `toString`
 
 Must be prudent when we need a copy of an object. Copy constructor and copy factory are two better ways.
 
+### Item 14 comperable
+
+If you want to compare two objects, consider implementing Comparator interface to this certain class. Remember, don’t use the subtraction of two values because it may cause integer overflow and IEEE 754 floating point arithmetic artifacts.
+
+Here are ways to implement comparing logic:
+
+1. Implement Comparable and override compreTo. In compareTo, use boxed class’s static compare methods instead of subtraction.
+
+   ```java
+   
+   public class Person implements Comparable<Person> {
+      String name;
+       int age;
+       int postalCode;
+   
+       ...
+       
+       @Override
+       public int compareTo(Person p) {
+           int result = String.CASE_INSENSITIVE_ORDER.compare(name, p.name);
+           if(result==0) result = Integer.compare(age, p.age);
+           if(result==0) result = Integer.compare(postalCode, p.postalCode);
+           return result;
+       }
+   }
+   ```
+
+   
+
+2. Use new Comparator{…} when invoking sort method. However it may burden performance of system.
+
+   ```java
+   animals.sort((o1, o2) -> {
+       int result = String.CASE_INSENSITIVE_ORDER.compare(o1.name, o2.name);
+       if (result == 0) result = Integer.compare(o1.age, o2.age);
+       if (result == 0) result = String.CASE_INSENSITIVE_ORDER.compare(o1.zoo, o2.zoo);
+       return result;
+   });
+   ```
+
+   
+
+3. Use Comparator based on Comparator construction method.
+
+   ```java
+   @Getter
+   @Setter
+   public class Person implements Comparable<Person> {
+       private static final Comparator<Person> COMPARATOR =
+           Comparator.comparing(Person::getName).thenComparingInt(Person::getAge).thenComparingInt(Person::getPostalCode);
+   
+       String name;
+       int age;
+       int postalCode;
+   
+   	...
+   
+       @Override
+       public int compareTo(Person p) {
+           return COMPARATOR.compare(this, p);
+       }
+   }
+   ```
+
+   
+
 ## Chapter 4
 
 ## Chapter 5
