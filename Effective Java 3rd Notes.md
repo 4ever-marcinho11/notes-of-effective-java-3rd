@@ -232,14 +232,14 @@ Ways to create singleton:
            }
    		return logger;
    	}
-   }
+   }　
    ```
 
 4. thread-safe lazy initialization: 
 
    ```java
    public class Logger {
-       // volatile prevents instruction reordering in multithreading
+     // volatile prevents instruction reordering in multithreading
    	private static volatile Logger logger;
    	
    	private Logger() {
@@ -248,21 +248,21 @@ Ways to create singleton:
    	
        // In fact, synchronization is only required when the first few threads are competing to create an instance, but the synchronized annotation on a method can cause performance degradation even after the instance is created
    	public static synchronized Logger getLogger_1() {
-           if (logger == null) {
-               logger = new Logger();
-           }
+       if (logger == null) {
+           logger = new Logger();
+       }
    		return logger;
    	}
        
-       // Use double check locks to improve efficiency
-       public static Logger getLogger_2() {
+     // Use double check locks to improve efficiency
+     public static Logger getLogger_2() {
+       if (logger == null) {
+         synchronized (Logger.class) {
            if (logger == null) {
-               synchronized (Logger.class) {
-                   if (logger == null) {
-                       logger = new Logger();
-                   }
-               }
+               logger = new Logger();，
            }
+         }
+       }
    		return logger;
    	}
    }
@@ -273,15 +273,15 @@ Ways to create singleton:
    ```java
    public class Logger {
    	private Logger() {
-   		// initialize logger
+     	// initialize logger
    	}
    	
-       private static class LoggerHelper {
-           private static final Logger logger = new Logger();
-       }
+     private static class LoggerHelper {
+       private static final Logger logger = new Logger();
+     }
        
    	public static Logger getLogger() {
-           return LoggerHelper.logger;
+       return LoggerHelper.logger;
    	}
    }
    ```
@@ -292,9 +292,9 @@ But you can break singleton by invoking the private constructor reflectively. Ho
 public enum Logger {
 	LOGGER;
     
-    private Logger () {
-        // initialize logger
-    }
+  private Logger () {
+    // initialize logger
+  }
 }
 ```
 
@@ -434,30 +434,30 @@ If you want to compare two objects, consider implementing Comparator interface t
 
 Here are ways to implement comparing logic:
 
-1. Implement Comparable and override compreTo. In compareTo, use boxed class’s static compare methods instead of subtraction.
+1. Implement Comparable and override `compreTo()`. In `compreTo()`, use boxed class’s static compare methods instead of subtraction.
 
    ```java
    
    public class Person implements Comparable<Person> {
-      String name;
-       int age;
-       int postalCode;
+     String name;
+     int age;
+     int postalCode;
    
-       ...
-       
-       @Override
-       public int compareTo(Person p) {
-           int result = String.CASE_INSENSITIVE_ORDER.compare(name, p.name);
-           if(result==0) result = Integer.compare(age, p.age);
-           if(result==0) result = Integer.compare(postalCode, p.postalCode);
-           return result;
-       }
+     ...
+   
+     @Override
+     public int compareTo(Person p) {
+       int result = String.CASE_INSENSITIVE_ORDER.compare(name, p.name);
+       if(result==0) result = Integer.compare(age, p.age);
+       if(result==0) result = Integer.compare(postalCode, p.postalCode);
+       return result;
+     }
    }
    ```
 
    
 
-2. Use new Comparator{…} when invoking sort method. However it may burden performance of system.
+2. Use `new Comparator{…}` when invoking sort method. **However** it may burden performance of system.
 
    ```java
    animals.sort((o1, o2) -> {
@@ -476,25 +476,104 @@ Here are ways to implement comparing logic:
    @Getter
    @Setter
    public class Person implements Comparable<Person> {
-       private static final Comparator<Person> COMPARATOR =
-           Comparator.comparing(Person::getName).thenComparingInt(Person::getAge).thenComparingInt(Person::getPostalCode);
+     private static final Comparator<Person> COMPARATOR =  Comparator.comparing(Person::getName).thenComparingInt(Person::getAge).thenComparingInt(Person::getPostalCode);
    
-       String name;
-       int age;
-       int postalCode;
-   
+     String name;
+     int age;
+     int postalCode;
    	...
    
-       @Override
-       public int compareTo(Person p) {
-           return COMPARATOR.compare(this, p);
-       }
+     @Override
+     public int compareTo(Person p) {
+       return COMPARATOR.compare(this, p);
+     }
    }
    ```
-
+   
    
 
 ## Chapter 4
+
+### item 15 decouple
+
+You can use these four keywords to decorate an attribute to change the visibility of it.
+
+|                                      | public | protected | default | private |
+| ------------------------------------ | ------ | --------- | ------- | ------- |
+| in the same class                    | ✅      | ✅         | ✅       | ✅       |
+| in the same package                  | ✅      | ✅         | ✅       |         |
+| in different packages but extends    | ✅      | ✅         |         |         |
+| in differnet package and not extends | ✅      |           |         |         |
+
+But if a class has many private attributes and it implements `Serializable` interface, these private attributes may forfeit their data protection.
+
+```java
+public class DemoForfeit {
+    static String path = "/.../item_15/";
+    public static void main(String[] args) {
+        Data d = Data.of("xiaoming_zh", 22, true, "xiaoming_zh@email.com", "zhangxiaoming's id");
+        System.out.println(d);
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(path + "data.ser"))) {
+            oos.writeObject(d);
+            System.out.println("Serializing...");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(path + "data.ser"))) {
+            Data deData = (Data) ois.readObject();
+            System.out.println("deserialized data: " + deData);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+@lombok.Data
+class Data implements Serializable {
+    public static final long serialVersionUID = 1L;
+    private String name;
+    private Integer age;
+    private Boolean gender;
+    private String email;
+    private String id;
+    private Data() {
+    }
+    public static Data of(String name, Integer age, Boolean gender, String email, String id) {
+        Data d = new Data();
+        d.name = name;
+        d.age = age;
+        d.gender = gender;
+        d.email = email;
+        d.id = id;
+        return d;
+    }
+}
+```
+
+The result is as below. we can find that, after deserializing, we can get the id of a person, which is not what we want. We must keep id invisible.
+
+```cmd
+Data(name=xiaoming_zh, age=22, gender=true, email=xiaoming_zh@email.com, id=zhangxiaoming's id)
+Serializing...
+deserialized data: Data(name=xiaoming_zh, age=22, gender=true, email=xiaoming_zh@email.com, id=zhangxiaoming's id)
+```
+
+So, an effective way is add `transient` to attribute `id`: `private transient String id;`.
+
+The result is as below:
+
+```cmd
+Data(name=xiaoming_zh, age=22, gender=true, email=xiaoming_zh@email.com, id=zhangxiaoming's id)
+Serializing...
+deserialized data: Data(name=xiaoming_zh, age=22, gender=true, email=xiaoming_zh@email.com, id=null)
+```
+
+
+
+Interface in Java is default `abstract`, so you **don't** need to declare an interface like `public abstract interface MyInterface`. 
+
+Attributes in an interface is default `public static final`, so you can declare an attribute like `int number;` instead of `public static final int number;`.
+
+Methods in an interface is default `public abstract`.
 
 ## Chapter 5
 
