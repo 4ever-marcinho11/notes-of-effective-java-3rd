@@ -4,19 +4,19 @@
 
 ### Item 1 static factory
 
-Assume that there’s a class called `Person`. You can get an object by `new Person()` or static factory method like `PersonFactory.getOnePerson()`.
+Assume that there’s a class called `Person`. You can get an object by `new Person()` or a static factory method like `PersonFactory.getOnePerson()`.
 
-Why do we choose this static factory method? Here are some advantages and disadvantages:
+Why do we choose the latter way? Here are some advantages and disadvantages:
 
 advantages:
 
-1. Static factory methods can offer clear guidance. In Java, constructors can be overloaded, but they cannot have identical parameter lists. So this sentence means that we can change the order of a sequence of parameters to get an object of the same attributes. However, these constructors may confuse us because they are similar and we can’t know the differences directly by different orders of parameters.
-2. `new Person()` creates a new Person object when it is called. But static factory method can avoid this circumstance when we don’t want to create an object every time we call them.
+1. Static factory methods can offer clear guidance. In Java, constructors can be overloaded, but they cannot have identical parameter list. So this sentence means that we can change the order of a sequence of parameters to get an object of the same attributes. However, these constructors may confuse us because they are similar and we can’t know the differences directly by different orders of parameters.
+2. `new Person()` creates a new `Person` object when it is called. But static factory method can avoid this circumstance when we don’t want to create an object every time we call them.
    - The target of `Flyweight pattern`: to reduce the occupation of memory and the cost of creating objects so that to enhance the performance.
 
 3. The combination of static factory method and factory method pattern can let users acquire any actual class of an abstract class.
 4. Different input parameters determine different returned types that are mentioned in the 3rd advantage.
-5. When you are writing the class of `PersonFactory`, you don't need to know what object you will get finally. Just like you may get a Male or Female object, however, in the static factory method `getOnePerson()`, the return type is simply `Person`. Of course, this advantage also have a strong relationship with 3rd advantage.
+5. When you are writing the class of `PersonFactory`, you don't need to know what object you will get finally. In the static factory method `getOnePerson()`, the return type is simply `Person`. Of course, this advantage also have a strong relationship with 3rd advantage.
    - `Bridge pattern`:
      1. `Service provider framework` is a set of some functions. These functions can be called as `service interface`.
      2. Provider use `provider registration API` to implement these abstract functions and can also add some new functions.
@@ -176,7 +176,6 @@ Ways to create singleton:
    	private static final Logger logger = new Logger();
    	
    	private Logger() {
-   		// initialize logger
    	}
    	
    	public static Logger getLogger() {
@@ -184,7 +183,7 @@ Ways to create singleton:
    	}
    }
    ```
-
+   
 2. static block initialization: Thread-safe because of static block will execute only once when loading the class. However, the singleton object is instantiated  when the class is loaded, whether it is used or not.
 
    ```java
@@ -200,7 +199,6 @@ Ways to create singleton:
    	}
    	
    	private Logger() {
-   		// initialize logger
    	}
    	
    	public static Logger getLogger() {
@@ -208,7 +206,7 @@ Ways to create singleton:
    	}
    }
    ```
-
+   
 3. lazy initialization: Thread-safe in single-thread but unsafe in multi-thread
 
    ```java
@@ -216,7 +214,6 @@ Ways to create singleton:
    	private static Logger logger;
    	
    	private Logger() {
-   		// initialize logger
    	}
    	
    	public static Logger getLogger() {
@@ -234,37 +231,38 @@ Ways to create singleton:
    	}
    }　
    ```
-
+   
 4. thread-safe lazy initialization: 
 
    ```java
    public class Logger {
-     // volatile prevents instruction reordering in multithreading
+       // Volatile prevents instruction reordering in multi-thread and other threads can see this change instantly.
    	private static volatile Logger logger;
    	
    	private Logger() {
-   		// initialize logger
    	}
    	
        // In fact, synchronization is only required when the first few threads are competing to create an instance, but the synchronized annotation on a method can cause performance degradation even after the instance is created
    	public static synchronized Logger getLogger_1() {
-       if (logger == null) {
-           logger = new Logger();
-       }
-   		return logger;
+           if (logger == null) {
+               logger = new Logger();
+           }
+           return logger;
    	}
        
-     // Use double check locks to improve efficiency
-     public static Logger getLogger_2() {
-       if (logger == null) {
-         synchronized (Logger.class) {
+       // Use double check locks to improve efficiency
+       public static Logger getLogger_2() {
+           // 1st check is to avoid unnecerry synchonization
            if (logger == null) {
-               logger = new Logger();，
+               synchronized (Logger.class) {
+                   // There will be many threads that pass the 1st check, we need to ensure only one thread creates the unique object.
+                   if (logger == null) {
+                       logger = new Logger();，
+                   }
+               }
            }
-         }
+           return logger;
        }
-   		return logger;
-   	}
    }
    ```
 
@@ -273,15 +271,15 @@ Ways to create singleton:
    ```java
    public class Logger {
    	private Logger() {
-     	// initialize logger
    	}
    	
-     private static class LoggerHelper {
-       private static final Logger logger = new Logger();
-     }
+       // A static inner class is not loaded immediately when an external class loads, but is loaded and initialized the first time it is used (that is, to access its static members or methods)
+       private static class LoggerHelper {
+       	private static final Logger logger = new Logger();
+       }
        
    	public static Logger getLogger() {
-       return LoggerHelper.logger;
+       	return LoggerHelper.logger;
    	}
    }
    ```
@@ -292,9 +290,8 @@ But you can break singleton by invoking the private constructor reflectively. Ho
 public enum Logger {
 	LOGGER;
     
-  private Logger () {
-    // initialize logger
-  }
+    private Logger () {
+    }
 }
 ```
 
@@ -305,7 +302,6 @@ public class Logger implements Serializable {
 	private static final long serialVersionUID = 1L;
     
     private Logger () {
-        // initialize logger
     }
     
     private static class LoggerHelper {
@@ -575,7 +571,38 @@ Attributes in an interface is default `public static final`, so you can declare 
 
 Methods in an interface is default `public abstract`.
 
+
+
+### item 16 In public classes, use accessor methods, not public fields
+
+
+
+### item 17 Minimize mutability
+
+
+
+### item 18 Favor composition over inheritance
+
+
+
+### item 19
+
+
+
+### item 20 Prefer interfaces to abstract classes
+
+
+
 ## Chapter 5
+
+
+
+### item 28
+
+Array versus generic list:
+
+- Array is type-safe in runtime but type-unsafe in compile time.
+- Generic list is type-safe in compile time but type-unsafe in runtime.
 
 ## Chapter 6
 
